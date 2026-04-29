@@ -1,0 +1,1 @@
+import { IsDateString, IsNumber, IsString, Min } from 'class-validator'; export class CreateCampaignDto { @IsString() title!: string; @IsString() description!: string; @IsDateString() startDate!: string; @IsDateString() endDate!: string; @IsNumber() @Min(0.01) minimumValuePerCoupon!: number; }

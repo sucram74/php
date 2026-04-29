@@ -8,19 +8,26 @@ datasource db {
 }
 
 model Tenant {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  slug      String    @unique
+  status    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   users     User[]
   campaigns Campaign[]
+  purchases Purchase[]
+  coupons   Coupon[]
 }
 
 model User {
   id        String   @id @default(cuid())
   tenantId  String   @map("tenant_id")
+  name      String
   email     String   @unique
   password  String
+  role      String
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -29,15 +36,72 @@ model User {
   @@index([tenantId])
 }
 
-model Campaign {
-  id        String   @id @default(cuid())
-  tenantId  String   @map("tenant_id")
-  title     String
-  status    String   @default("draft")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Consumer {
+  id        String     @id @default(cuid())
+  cpf       String     @unique
+  name      String
+  phone     String
+  email     String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  purchases Purchase[]
+  coupons   Coupon[]
+}
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+model Campaign {
+  id                    String     @id @default(cuid())
+  tenantId              String     @map("tenant_id")
+  title                 String
+  description           String
+  startDate             DateTime   @map("start_date")
+  endDate               DateTime   @map("end_date")
+  minimumValuePerCoupon Decimal    @map("minimum_value_per_coupon") @db.Decimal(10, 2)
+  active                Boolean    @default(true)
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  tenant                Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  purchases             Purchase[]
+  coupons               Coupon[]
 
   @@index([tenantId])
+}
+
+model Purchase {
+  id           String   @id @default(cuid())
+  tenantId     String   @map("tenant_id")
+  campaignId   String   @map("campaign_id")
+  consumerId   String   @map("consumer_id")
+  amount       Decimal  @db.Decimal(10, 2)
+  purchaseDate DateTime @map("purchase_date")
+  createdAt    DateTime @default(now())
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  consumer Consumer @relation(fields: [consumerId], references: [id], onDelete: Cascade)
+  coupons  Coupon[]
+
+  @@index([tenantId])
+  @@index([campaignId])
+  @@index([consumerId])
+}
+
+model Coupon {
+  id         String   @id @default(cuid())
+  tenantId   String   @map("tenant_id")
+  campaignId String   @map("campaign_id")
+  consumerId String   @map("consumer_id")
+  purchaseId String   @map("purchase_id")
+  couponCode String   @unique @map("coupon_code")
+  generatedAt DateTime @default(now()) @map("generated_at")
+  active     Boolean  @default(true)
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  consumer Consumer @relation(fields: [consumerId], references: [id], onDelete: Cascade)
+  purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([campaignId])
+  @@index([consumerId])
+  @@index([purchaseId])
 }

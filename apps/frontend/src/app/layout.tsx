@@ -1,14 +1,2 @@
-import './globals.css';
-
-export const metadata = {
-  title: 'Promo SaaS',
-  description: 'Fundação SaaS multi-tenant para campanhas e sorteios'
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="pt-BR">
-      <body>{children}</body>
-    </html>
-  );
-}
+import './globals.css'; import { AdminShell } from '@/components/admin-shell';
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang='pt-BR'><body><AdminShell>{children}</AdminShell></body></html>}
