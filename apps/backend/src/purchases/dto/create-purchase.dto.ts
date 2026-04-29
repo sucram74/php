@@ -1,0 +1,1 @@
+import { IsNumber, IsString, Min } from 'class-validator'; export class CreatePurchaseDto { @IsString() campaignId!: string; @IsString() cpf!: string; @IsString() name!: string; @IsString() phone!: string; @IsNumber() @Min(0.01) amount!: number; }
