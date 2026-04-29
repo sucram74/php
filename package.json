@@ -1,0 +1,13 @@
+{
+  "name": "promo-saas-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "npm --workspace @apps/frontend run dev",
+    "dev:backend": "npm --workspace @apps/backend run start:dev",
+    "build": "npm run -ws build"
+  }
+}
