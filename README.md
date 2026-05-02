@@ -29,3 +29,8 @@ docker compose up --build
 2. Criar campanha com valor mínimo por cupom.
 3. Lançar compra informando CPF, nome, telefone, campanha e valor.
 4. Verificar cupons gerados na listagem de cupons.
+
+## Pix (MVP) e integração futura
+- O fluxo atual de Pix é manual (MVP), sem confirmação automática bancária.
+- A confirmação automática será implementada futuramente com integração PSP/banco.
+- Provedores possíveis: Gerencianet/Efi, Mercado Pago, Asaas, Banco do Brasil e cooperativas com API (Sicoob/Sicredi/Cresol).

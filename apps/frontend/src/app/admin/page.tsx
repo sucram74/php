@@ -1,29 +1,3 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { api } from '@/lib/api';
-
-export default function AdminPage() {
-  const [d, setD] = useState<any>({});
-
-  useEffect(() => {
-    void Promise.all([api('/campaigns'), api('/consumers'), api('/coupons')]).then(([campaigns, consumers, coupons]) => {
-      setD({ campaigns: campaigns.length, consumers: consumers.length, coupons: coupons.length });
-    });
-  }, []);
-
-  return (
-    <div className='space-y-4'>
-      <h1 className='text-2xl font-bold'>Visão geral da plataforma SaaS</h1>
-      <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
-        {[['Total de lojas', 1], ['Total de campanhas', d.campaigns ?? 0], ['Total de consumidores', d.consumers ?? 0], ['Total de cupons', d.coupons ?? 0]].map(([title, value]) => (
-          <div key={String(title)} className='ui-card'><p className='text-sm text-slate-600'>{String(title)}</p><strong className='text-2xl'>{value as number}</strong></div>
-        ))}
-      </div>
-      <div className='ui-card'>
-        <h2 className='font-semibold'>Próximos módulos</h2>
-        <p className='text-sm text-slate-600'>Assinaturas, auditoria e gestão de lojas (estrutura inicial preparada).</p>
-      </div>
-    </div>
-  );
-}
+'use client'; import { useEffect, useState } from 'react'; import { api } from '@/lib/api'; import { Button } from '@/components/ui/button';
+export default function(){const[d,setD]=useState<any>({}); const [pending,setPending]=useState<any[]>([]); useEffect(()=>{void Promise.all([api('/campaigns'),api('/consumers'),api('/coupons'),api('/draws')]).then(([ca,co,cu,dr])=>setD({campaigns:ca.length,consumers:co.length,coupons:cu.length,draws:dr.length,drawn:(dr||[]).reduce((a:any,x:any)=>a+x.quantity,0)}));},[]);
+return <div className='space-y-4'><h1 className='text-2xl font-bold'>Visão geral da plataforma SaaS</h1><div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>{[['Total de lojas',1],['Total de campanhas',d.campaigns??0],['Total de consumidores',d.consumers??0],['Total de cupons',d.coupons??0],['Total geral de sorteios',d.draws??0],['Total geral de cupons sorteados',d.drawn??0],['Lojas sem crédito','-'],['Assinaturas futuras','-']].map(([title,value])=><div key={String(title)} className='ui-card'><p>{String(title)}</p><strong className='text-2xl'>{value as any}</strong></div>)}</div><div className='ui-card'><h2 className='font-semibold'>Configuração de Créditos</h2><p className='text-sm'>Pacotes e confirmação manual serão gerenciados aqui.</p><Button onClick={()=>setPending([])}>Atualizar pendentes</Button></div></div>}
