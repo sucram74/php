@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  @apply bg-slate-50 text-zinc-900 antialiased;
+  @apply overflow-x-hidden bg-slate-50 text-zinc-900 antialiased;
 }
 
 @keyframes shrink {

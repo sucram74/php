@@ -102,7 +102,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   if (isPublicRoute) {
     return (
       <>
-        <HelpBot isAuthenticated={false} />
+        <HelpBot mode='floating' />
         {children}
       </>
     );
@@ -117,13 +117,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <div className='flex h-screen flex-col overflow-hidden md:flex-row'>
       <Tutorial />
-      <HelpBot isAuthenticated />
+      
       <Toast message={toast} onClose={() => setToast('')} />
       <div className='flex items-center justify-between bg-slate-900 px-4 py-3 text-white md:hidden'>
         <span className='font-bold'>Promo SaaS</span>
         <Button variant='secondary' onClick={() => setMenuOpen((v) => !v)}>{menuOpen ? 'Fechar menu' : 'Menu'}</Button>
       </div>
-      <aside className={`shrink-0 bg-slate-900 p-4 text-white flex flex-col md:h-screen md:w-64 ${menuOpen ? 'block' : 'hidden'} md:block`}>
+      <aside className={`shrink-0 bg-slate-900 p-4 text-white flex flex-col md:h-screen md:w-72 ${menuOpen ? 'block' : 'hidden'} md:block`}>
         <h2 className='mb-6 text-xl font-bold'>Promo SaaS</h2>
         <nav className='grid grid-cols-2 gap-1 md:block md:space-y-1'>
           {menus.map(([k, l]) => (
@@ -138,6 +138,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             Sair
           </Button>
         </nav>
+        <HelpBot mode='sidebar' />
         <div className='mt-auto border-t border-white/20 pt-4 text-sm'>
           <p>Loja: {footerData.store}</p>
           <p>Usuário: {footerData.user}</p>

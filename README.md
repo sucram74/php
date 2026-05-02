@@ -34,3 +34,26 @@ docker compose up --build
 - O fluxo atual de Pix é manual (MVP), sem confirmação automática bancária.
 - A confirmação automática será implementada futuramente com integração PSP/banco.
 - Provedores possíveis: Gerencianet/Efi, Mercado Pago, Asaas, Banco do Brasil e cooperativas com API (Sicoob/Sicredi/Cresol).
+
+## QA E2E mínimo (v0.1.8)
+
+Pré-requisitos:
+- Dependências instaladas no monorepo.
+- Navegadores do Playwright instalados localmente.
+- Backend e frontend buildados.
+
+Comandos:
+```bash
+npm install
+npx playwright install
+npm --workspace @apps/frontend run test:e2e
+```
+
+Observações:
+- O teste E2E está em `apps/frontend/tests/e2e/qa-v018.spec.ts`.
+- O setup do Playwright está em `apps/frontend/playwright.config.ts`.
+- As credenciais demo usadas pelo E2E são:
+  - admin: `admin@demo.com` / `admin123`
+  - loja: `store@demo.com` / `store123`
+- Essas credenciais são criadas apenas pelo seed de desenvolvimento (`apps/backend/prisma/seed.ts`).
+- Em ambiente sem Playwright instalado, o build do frontend não quebra porque arquivos de E2E estão fora do typecheck do Next (`apps/frontend/tsconfig.json`).

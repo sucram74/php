@@ -16,12 +16,14 @@ export default function AdminPage(){
   const [view,setView]=useState<'campanhas'|'consumidores'|'cupons'|'sorteios'|'cupons_sorteados'|'sem_credito'|''>('');
   const [query,setQuery]=useState('');
   const [lists,setLists]=useState<any>({campaigns:[],consumers:[],coupons:[],draws:[],stores:[]});
+  const [bot,setBot]=useState<any>({unanswered:[],topQuestions:[],ratings:[],sessions:[]});
 
   const load=async()=>{
     const [ca,co,cu,dr,pd,pk]=await Promise.all([api('/campaigns'),api('/consumers'),api('/coupons'),api('/draws'),api('/credits/admin/pending-transactions'),api('/credits/admin/packages')]);
     setD({campaigns:ca.length,consumers:co.length,coupons:cu.length,draws:dr.length,drawn:(dr||[]).reduce((a:any,x:any)=>a+x.quantity,0)});
     setPending(pd as any[]); setPacks(pk as any[]);
     setLists({campaigns:ca,consumers:co,coupons:cu,draws:dr,stores:(pd as any[]).map((x:any)=>x.tenant).filter(Boolean)});
+    setBot(await api('/help-chat/admin/insights'));
   };
   useEffect(()=>{void load();},[]);
 
@@ -53,7 +55,15 @@ export default function AdminPage(){
 
     <div className='ui-card space-y-3'>
       <div className='flex items-center justify-between'><h2 className='font-semibold'>Transações pendentes</h2><Button variant='secondary' onClick={()=>void load()}>Atualizar pendentes</Button></div>
-      <div className='space-y-2'>{pending.map((t:any)=><div key={t.id} className='grid gap-2 border-b pb-2 text-sm md:grid-cols-6'><span>{t.tenant?.name||'-'}</span><span>{t.packageName||'-'}</span><span>{t.quantity} créditos</span><span>{brl(Number(t.amount))}</span><span>{st(t.status)}</span><span className='flex gap-2'><Button onClick={async()=>{await api(`/credits/transactions/${t.id}/mark-paid`,{method:'PATCH'});setToast('Crédito aprovado com sucesso.');void load();}}>Aprovar</Button><Button variant='danger' onClick={async()=>{await api(`/credits/transactions/${t.id}/reject`,{method:'PATCH'});setToast('Transação rejeitada.');void load();}}>Rejeitar</Button></span></div>)}</div>
+      <div className='ui-table-wrap'><div className='min-w-[760px] space-y-2'>{pending.map((t:any)=><div key={t.id} className='grid gap-2 border-b pb-2 text-sm md:grid-cols-6'><span>{t.tenant?.name||'-'}</span><span>{t.packageName||'-'}</span><span>{t.quantity} créditos</span><span>{brl(Number(t.amount))}</span><span>{st(t.status)}</span><span className='flex gap-2'><Button onClick={async()=>{await api(`/credits/transactions/${t.id}/mark-paid`,{method:'PATCH'});setToast('Crédito aprovado com sucesso.');void load();}}>Aprovar</Button><Button variant='danger' onClick={async()=>{await api(`/credits/transactions/${t.id}/reject`,{method:'PATCH'});setToast('Transação rejeitada.');void load();}}>Rejeitar</Button></span></div>)}</div></div>
+    </div>
+
+    <div className='ui-card space-y-3'>
+      <h2 className='font-semibold'>Perguntas do bot</h2>
+      <p className='text-sm'>Não respondidas: {bot.unanswered?.length || 0}</p>
+      <div className='ui-table-wrap'><div className='min-w-[640px] text-sm'>
+        {(bot.unanswered||[]).slice(0,10).map((q:any,i:number)=><div key={i} className='border-b py-2'>{q.question}</div>)}
+      </div></div>
     </div>
   </div>
 }
