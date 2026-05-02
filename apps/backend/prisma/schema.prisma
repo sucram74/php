@@ -183,3 +183,74 @@ model CreditTransaction {
 
   @@index([tenantId])
 }
+
+model HelpKnowledgeBase {
+  id              String   @id
+  category        String
+  title           String
+  questionPattern String   @map("questionPattern")
+  keywords        String[] @default([])
+  answer          String
+  priority        Int      @default(0)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("help_knowledge_base")
+}
+
+model HelpUnansweredQuestion {
+  id                 String   @id
+  tenantId           String?  @map("tenantId")
+  userId             String?  @map("userId")
+  question           String
+  normalizedQuestion String   @map("normalizedQuestion")
+  createdAt          DateTime @default(now()) @map("createdAt")
+  resolved           Boolean  @default(false)
+  notes              String?
+
+  @@map("help_unanswered_questions")
+}
+
+model HelpChatSession {
+  id        String    @id
+  tenantId  String?   @map("tenant_id")
+  userId    String?   @map("user_id")
+  startedAt DateTime  @default(now()) @map("started_at")
+  endedAt   DateTime? @map("ended_at")
+
+  messages  HelpChatMessage[]
+  ratings   HelpChatRating[]
+
+  @@map("help_chat_sessions")
+}
+
+model HelpChatMessage {
+  id         String   @id
+  sessionId  String?  @map("session_id")
+  tenantId   String?  @map("tenant_id")
+  userId     String?  @map("user_id")
+  question   String?
+  answer     String?
+  confidence String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  session HelpChatSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@map("help_chat_messages")
+}
+
+model HelpChatRating {
+  id        String   @id
+  sessionId String?  @map("session_id")
+  tenantId  String?  @map("tenant_id")
+  userId    String?  @map("user_id")
+  stars     Int?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  session HelpChatSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId])
+  @@map("help_chat_ratings")
+}
