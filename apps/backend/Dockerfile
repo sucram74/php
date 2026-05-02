@@ -15,4 +15,4 @@ RUN npm --workspace @apps/backend run prisma:generate
 RUN npm --workspace @apps/backend run build
 
 EXPOSE 3001
-CMD ["sh", "-c", "npm --workspace @apps/backend run prisma:generate && npm --workspace @apps/backend run start"]
+CMD ["sh", "-c", "npm --workspace @apps/backend run prisma:generate && npx prisma migrate deploy --schema apps/backend/prisma/schema.prisma && npm --workspace @apps/backend run prisma:seed && npm --workspace @apps/backend run start"]
