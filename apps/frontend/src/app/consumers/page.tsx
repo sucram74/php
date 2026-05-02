@@ -169,8 +169,8 @@ export default function ConsumersPage() {
 
             const payload = { ...form, cpf: form.cpf.replace(/\D/g, '') };
             if (editingId) {
-              await api(`/consumers/${editingId}`, { method: 'PATCH', body: JSON.stringify(payload) });
-              setToast('Consumidor alterado com sucesso.');
+              await api(`/consumers/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) });
+              setToast('Consumidor atualizado com sucesso.');
             } else {
               await api('/consumers', { method: 'POST', body: JSON.stringify(payload) });
               setToast('Consumidor cadastrado com sucesso.');

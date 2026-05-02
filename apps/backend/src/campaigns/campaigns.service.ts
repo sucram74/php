@@ -1,11 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { CreditsService } from '../credits/credits.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { UpdateCampaignDto } from './dto/update-campaign.dto';
 
 @Injectable()
 export class CampaignsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private credits: CreditsService) {}
   list(tenantId: string) { return this.prisma.campaign.findMany({ where: { tenantId }, orderBy: { createdAt: 'desc' } }); }
   async get(tenantId: string, id: string) { const c = await this.prisma.campaign.findFirst({ where: { tenantId, id } }); if (!c) throw new NotFoundException('Campanha não encontrada'); return c; }
 
@@ -15,7 +16,7 @@ export class CampaignsService {
     if (end < now) throw new BadRequestException('Data final não pode ser menor que data atual.');
   }
 
-  create(tenantId: string, d: CreateCampaignDto) { this.validateDates(d.startDate, d.endDate); return this.prisma.campaign.create({ data: { tenantId, ...d, startDate: new Date(d.startDate), endDate: new Date(d.endDate) } }); }
+  async create(tenantId: string, d: CreateCampaignDto) { this.validateDates(d.startDate, d.endDate); await this.credits.consumeCampaignCredit(tenantId); return this.prisma.campaign.create({ data: { tenantId, ...d, startDate: new Date(d.startDate), endDate: new Date(d.endDate) } }); }
   async update(tenantId: string, id: string, d: UpdateCampaignDto) {
     await this.get(tenantId, id);
     const startDate = d.startDate ?? new Date().toISOString(); const endDate = d.endDate ?? new Date().toISOString();
