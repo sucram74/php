@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 
 export function HelpBot(){
   const [open,setOpen]=useState(false); const [msg,setMsg]=useState(''); const [loading,setLoading]=useState(false); const [sessionId,setSessionId]=useState<string|undefined>(); const [log,setLog]=useState<{q:string;a:string}[]>([{q:'',a:'Olá! 😊 Sou a assistente do Promo SaaS. Posso ajudar com campanhas, compras, créditos, cupons e sorteios.'}]);
-  return <div className='fixed bottom-4 left-4 z-50'>
+  return <div className='fixed bottom-4 right-4 z-50'>
     <button className='h-14 w-14 rounded-full bg-pink-500 text-2xl text-white shadow-lg' onClick={()=>setOpen(!open)}>👩</button>
     {open && <div className='mt-2 w-80 rounded-md border bg-white p-3 shadow-xl'>
       <div className='flex items-center justify-between'><h3 className='font-semibold'>Ajuda Promo SaaS</h3><div className='space-x-2'><button className='text-xs' onClick={()=>setLog([{q:'',a:'Olá! 😊 Sou a assistente do Promo SaaS. Posso ajudar com campanhas, compras, créditos, cupons e sorteios.'}])}>Limpar</button><button className='text-xs' onClick={()=>setOpen(false)}>Minimizar</button></div></div>
