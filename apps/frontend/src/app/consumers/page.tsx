@@ -63,6 +63,7 @@ function maskPhone(phone: string) {
 export default function ConsumersPage() {
   const [items, setItems] = useState<any[]>([]);
   const [cpf, setCpf] = useState('');
+  const [nameQuery, setNameQuery] = useState('');
   const [toast, setToast] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ cpf: '', name: '', phone: '' });
@@ -72,12 +73,6 @@ export default function ConsumersPage() {
   useEffect(() => {
     void load();
   }, []);
-
-  useEffect(() => {
-    if (!toast) return;
-    const timeout = setTimeout(() => setToast(''), 3000);
-    return () => clearTimeout(timeout);
-  }, [toast]);
 
   const validateConsumerForm = () => {
     if (!form.name.trim()) {
@@ -97,13 +92,17 @@ export default function ConsumersPage() {
 
   return (
     <div className='space-y-5'>
-      <Toast message={toast} />
+      <Toast message={toast} type='error' onClose={() => setToast('')} />
       <h1 className='text-2xl font-bold'>Consumidores</h1>
 
       <div className='flex flex-wrap items-end gap-3 rounded-md border p-4'>
         <label className='space-y-1'>
           <span className='text-sm font-medium'>CPF</span>
           <input className='rounded-md border p-2' placeholder='Digite o CPF' value={cpf} onChange={(e) => setCpf(formatCpf(e.target.value))} />
+        </label>
+        <label className='space-y-1'>
+          <span className='text-sm font-medium'>Nome</span>
+          <input className='rounded-md border p-2' placeholder='Digite o nome' value={nameQuery} onChange={(e) => setNameQuery(e.target.value)} />
         </label>
         <Button
           onClick={async () => {
@@ -129,6 +128,7 @@ export default function ConsumersPage() {
           className='bg-white text-slate-800 hover:bg-slate-100'
           onClick={() => {
             setCpf('');
+            setNameQuery('');
             setEditingId(null);
             setForm({ cpf: '', name: '', phone: '' });
             void load();
@@ -194,7 +194,7 @@ export default function ConsumersPage() {
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
+          {items.filter((item)=>!nameQuery.trim() || item.name.toLowerCase().includes(nameQuery.toLowerCase())).map((item) => (
             <tr key={item.id} className='border-t'>
               <td className='p-3'>{maskCpf(item.cpf)}</td>
               <td className='p-3'>{maskName(item.name)}</td>

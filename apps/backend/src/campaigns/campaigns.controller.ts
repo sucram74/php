@@ -14,5 +14,8 @@ export class CampaignsController {
   @Post() create(@Req() req: AuthRequest, @Body() d: CreateCampaignDto) { return this.s.create(req.user.tenantId, d); }
   @Put(':id') update(@Req() req: AuthRequest, @Param('id') id: string, @Body() d: UpdateCampaignDto) { return this.s.update(req.user.tenantId, id, d); }
   @Patch(':id/toggle-active') toggle(@Req() req: AuthRequest, @Param('id') id: string) { return this.s.toggle(req.user.tenantId, id); }
+  @Patch(':id/activate') activate(@Req() req: AuthRequest, @Param('id') id: string) { return this.s.activate(req.user.tenantId, id); }
+  @Patch(':id/pause') pause(@Req() req: AuthRequest, @Param('id') id: string) { return this.s.pause(req.user.tenantId, id); }
+  @Patch(':id/finalize') finalize(@Req() req: AuthRequest, @Param('id') id: string) { return this.s.finalize(req.user.tenantId, id, req.user.userId); }
   @Delete(':id') remove(@Req() req: AuthRequest, @Param('id') id: string) { return this.s.remove(req.user.tenantId, id); }
 }

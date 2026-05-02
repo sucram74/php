@@ -8,6 +8,7 @@ import { PurchasesModule } from './purchases/purchases.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { DrawsModule } from './draws/draws.module';
 import { CreditsModule } from './credits/credits.module';
+import { HelpModule } from './help/help.module';
 
-@Module({ imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, ConsumersModule, CampaignsModule, PurchasesModule, CouponsModule, DrawsModule, CreditsModule] })
+@Module({ imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, ConsumersModule, CampaignsModule, PurchasesModule, CouponsModule, DrawsModule, CreditsModule, HelpModule] })
 export class AppModule {}
