@@ -43,6 +43,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [allowAdmin, setAllowAdmin] = useState(false);
   const [toast, setToast] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const publicRoutes = ['/', '/login'];
   const isPublicRoute = publicRoutes.includes(pathname);
@@ -101,7 +102,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   if (isPublicRoute) {
     return (
       <>
-        <HelpBot />
+        <HelpBot isAuthenticated={false} />
         {children}
       </>
     );
@@ -114,15 +115,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const menus = footerData.role === 'admin' ? adminMenu : [...lojaMenu, ...(allowAdmin ? adminMenu : [])];
 
   return (
-    <div className='flex h-screen overflow-hidden'>
+    <div className='flex h-screen flex-col overflow-hidden md:flex-row'>
       <Tutorial />
-      <HelpBot />
+      <HelpBot isAuthenticated />
       <Toast message={toast} onClose={() => setToast('')} />
-      <aside className='w-64 h-screen shrink-0 bg-slate-900 p-4 text-white flex flex-col'>
+      <div className='flex items-center justify-between bg-slate-900 px-4 py-3 text-white md:hidden'>
+        <span className='font-bold'>Promo SaaS</span>
+        <Button variant='secondary' onClick={() => setMenuOpen((v) => !v)}>{menuOpen ? 'Fechar menu' : 'Menu'}</Button>
+      </div>
+      <aside className={`shrink-0 bg-slate-900 p-4 text-white flex flex-col md:h-screen md:w-64 ${menuOpen ? 'block' : 'hidden'} md:block`}>
         <h2 className='mb-6 text-xl font-bold'>Promo SaaS</h2>
-        <nav className='space-y-1'>
+        <nav className='grid grid-cols-2 gap-1 md:block md:space-y-1'>
           {menus.map(([k, l]) => (
-            <Link key={String(k)} className='block rounded-md px-3 py-2 hover:bg-white/20' href={`/${k}`}>
+            <Link key={String(k)} className='block rounded-md px-3 py-2 hover:bg-white/20' href={`/${k}`} onClick={() => setMenuOpen(false)}>
               {String(l)}
             </Link>
           ))}
@@ -139,7 +144,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <p>Versão: {APP_VERSION}</p>
         </div>
       </aside>
-      <main className='flex-1 h-screen overflow-y-auto p-6'>{children}</main>
+      <main className='flex-1 overflow-y-auto p-4 md:h-screen md:p-6'>{children}</main>
     </div>
   );
 }

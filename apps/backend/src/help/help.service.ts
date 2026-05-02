@@ -5,10 +5,18 @@ import { PrismaService } from '../prisma.service';
 export class HelpService {
   constructor(private prisma: PrismaService) {}
   async ask(tenantId: string, userId: string, message: string, sessionId?: string) {
-    const m = message.toLowerCase();
-    const isPlatform = /(crédito|campanha|cupom|sorteio|consumidor|compra|login|painel|tutorial|whatsapp)/i.test(message);
+    const m = message.toLowerCase().trim();
+    const platformTopics = [
+      'assinar', 'assinatura', 'começar', 'comprar crédito', 'comprar creditos', 'crédito', 'credito', 'créditos', 'creditos',
+      'criar campanha', 'campanha', 'campanhas', 'cadastrar loja', 'loja', 'como funciona', 'funciona', 'plano', 'planos',
+      'preço', 'precos', 'preços', 'campanha grátis', 'campanha gratis', 'whatsapp', 'sorteio', 'sorteios', 'cupom', 'cupons',
+      'login', 'cadastro', 'onboarding', 'landing page', 'landing', 'suporte', 'dashboard', 'painel', 'compra',
+    ];
+
+    const isPlatform = platformTopics.some((topic) => m.includes(topic));
+
     const reply = isPlatform
-      ? 'Claro 😊 Posso ajudar com o uso do Promo SaaS. No menu lateral, escolha a área desejada (Créditos, Campanhas, Compras, Cupons ou Sorteios).'
+      ? "Você pode começar clicando em 'Começar grátis' 😊. Depois crie sua conta, ganhe sua primeira campanha gratuita e escolha um pacote de créditos quando desejar. Se quiser, também te guio em login, cadastro, criação de campanhas, cupons, sorteios e uso do dashboard."
       : 'Agradeço a interação 😊, mas só consigo ajudar com dúvidas sobre o uso da plataforma Promo SaaS.';
     await this.prisma.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS "help_chat_sessions"(id text primary key, tenant_id text, user_id text, started_at timestamptz default now(), ended_at timestamptz null)`);
     await this.prisma.$executeRawUnsafe(`CREATE TABLE IF NOT EXISTS "help_chat_messages"(id text primary key, session_id text, tenant_id text, user_id text, question text, answer text, created_at timestamptz default now())`);
