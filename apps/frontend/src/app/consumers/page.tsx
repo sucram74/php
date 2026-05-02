@@ -95,7 +95,7 @@ export default function ConsumersPage() {
       <Toast message={toast} type='error' onClose={() => setToast('')} />
       <h1 className='text-2xl font-bold'>Consumidores</h1>
 
-      <div className='flex flex-wrap items-end gap-3 rounded-md border p-4'>
+      <div className='ui-card grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-4'>
         <label className='space-y-1'>
           <span className='text-sm font-medium'>CPF</span>
           <input className='rounded-md border p-2' placeholder='Digite o CPF' value={cpf} onChange={(e) => setCpf(formatCpf(e.target.value))} />
@@ -138,7 +138,7 @@ export default function ConsumersPage() {
         </Button>
       </div>
 
-      <div className='space-y-3 rounded-md border p-4'>
+      <div className='ui-card space-y-3'>
         <label className='block space-y-1'>
           <span className='text-sm font-medium'>CPF</span>
           <input
@@ -163,7 +163,7 @@ export default function ConsumersPage() {
         </div>
 
         <Button
-          className='w-fit'
+          className='w-full sm:w-fit'
           onClick={async () => {
             if (!validateConsumerForm()) return;
 
@@ -184,7 +184,7 @@ export default function ConsumersPage() {
         </Button>
       </div>
 
-      <table className='w-full overflow-hidden rounded-md border border-collapse'>
+      <div className='ui-table-wrap'><table className='ui-table'>
         <thead className='bg-slate-100'>
           <tr>
             <th className='p-3 text-left'>CPF</th>
@@ -213,7 +213,7 @@ export default function ConsumersPage() {
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }

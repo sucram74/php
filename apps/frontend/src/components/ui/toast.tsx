@@ -24,7 +24,7 @@ export function Toast({ message, type = 'success', onClose }: ToastProps) {
 
   return (
     <div
-      className={`fixed right-6 top-6 z-50 w-[360px] overflow-hidden rounded-md px-4 py-3 text-sm text-white shadow-md ${
+      className={`fixed right-3 top-3 z-50 w-[calc(100vw-1.5rem)] max-w-[360px] md:right-6 md:top-6 overflow-hidden rounded-md px-4 py-3 text-sm text-white shadow-md ${
         type === 'error' ? 'bg-red-600' : 'bg-blue-700'
       } ${visible ? 'animate-pulse' : ''}`}
     >
