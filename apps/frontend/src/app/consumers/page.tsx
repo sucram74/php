@@ -37,7 +37,15 @@ function maskCpf(cpf: string) {
 function maskName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length <= 1) return name;
-  return [parts[0], ...parts.slice(1).map((part) => part[0].toUpperCase())].join(' ');
+
+  const ignoredParts = new Set(['da', 'de', 'di', 'do', 'du', 'das', 'dos', 'e']);
+  const initials = parts
+    .slice(1)
+    .filter((part) => !ignoredParts.has(part.toLowerCase()))
+    .map((part) => part[0].toUpperCase())
+    .join('');
+
+  return initials ? `${parts[0]} ${initials}` : parts[0];
 }
 
 function maskPhone(phone: string) {
