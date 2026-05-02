@@ -40,3 +40,13 @@ body {
     @apply border-t border-slate-200 p-3;
   }
 }
+
+@media (max-width: 768px) {
+  .ui-table {
+    min-width: 680px;
+  }
+
+  .ui-card {
+    padding: 0.875rem;
+  }
+}
