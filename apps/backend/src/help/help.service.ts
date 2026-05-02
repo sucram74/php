@@ -10,9 +10,32 @@ export class HelpService {
   private normalize(text: string) {
     return text
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[̀-ͯ]/g, '')
       .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  private stemToken(token: string) {
+    let stem = token;
+    if (stem.endsWith('coes')) stem = `${stem.slice(0, -4)}cao`;
+    else if (stem.endsWith('cao')) stem = `${stem.slice(0, -3)}ca`;
+    else if (stem.endsWith('oes')) stem = stem.slice(0, -3);
+    else if (stem.endsWith('s') && stem.length > 3) stem = stem.slice(0, -1);
+
+    if (stem.endsWith('ando') || stem.endsWith('endo') || stem.endsWith('indo')) stem = stem.slice(0, -4);
+    if (stem.endsWith('ar') || stem.endsWith('er') || stem.endsWith('ir')) stem = stem.slice(0, -2);
+    if (stem.endsWith('ura') || stem.endsWith('ino')) stem = stem.slice(0, -3);
+
+    return stem;
+  }
+
+  private tokenize(text: string) {
+    return this.normalize(text)
+      .split(' ')
+      .filter(Boolean)
+      .map((token) => this.stemToken(token));
   }
 
   private async ensureTables() {
@@ -47,10 +70,9 @@ export class HelpService {
 
   private async seedKnowledgeBase() {
     const count: Array<{ count: bigint }> = await this.prisma.$queryRawUnsafe('SELECT COUNT(*)::bigint as count FROM "help_knowledge_base"');
-    if ((count[0]?.count || 0n) > 0n) return;
 
     const rows = [
-      ['Comercial','Como assinar?','assinar|assinatura|contratar|teste gratis','Você pode começar clicando em "Começar grátis" 😊. Depois crie sua conta, ganhe sua primeira campanha gratuita e escolha um pacote de créditos quando desejar.',['assinar','assinatura','contratar','teste gratuito'],100],
+      ['Comercial','Como assinar?','assinar|assino|assinatura|plano|planos|contratar|contrato|plataforma|comecar|gratis|gratuito|preco|pago',"Você pode começar clicando em 'Começar grátis' 😊. Depois crie sua conta, ganhe sua primeira campanha gratuita e escolha um pacote de créditos quando desejar.",['assinar','assino','assinatura','plano','planos','contratar','contrato','plataforma','comecar','gratis','gratuito','preco','pago'],100],
       ['Comercial','Existe suporte?','suporte|atendimento|ajuda','Sim 😊. Você pode acionar o suporte pela própria plataforma ou pelo canal informado pela loja/administração.',['suporte','atendimento','ajuda'],95],
       ['Infraestrutura','A plataforma funciona 24 horas?','24 horas|disponibilidade|online','Sim 😊. A proposta da plataforma é funcionar online, 24 horas por dia. A disponibilidade final depende do ambiente de hospedagem.',['24 horas','online','nuvem'],98],
       ['Produto','Como criar campanha?','criar campanha|campanha','No menu Campanhas, clique em criar, informe regras, período e valor mínimo por cupom para ativar.',['campanha','cupom'],90],
@@ -60,17 +82,30 @@ export class HelpService {
       ['Produto','Como registrar compra?','registrar compra|compra','No menu Compras, selecione consumidor e campanha, informe valor e data. O sistema gera cupons conforme a regra.',['compra','cupons'],89],
     ];
 
-    for (const r of rows) {
+    if ((count[0]?.count || 0n) === 0n) {
+      for (const r of rows) {
       await this.prisma.$executeRawUnsafe(
         'INSERT INTO "help_knowledge_base"(id,category,title,"questionPattern",keywords,answer,priority,active) VALUES ($1,$2,$3,$4,$5,$6,$7,true)',
         `kb_${Date.now()}_${Math.random()}`,
         r[0], r[1], r[2], r[4], r[3], r[5],
       );
+      }
     }
+
+    await this.prisma.$executeRawUnsafe(
+      'UPDATE "help_knowledge_base" SET keywords = $1, "questionPattern" = $2, answer = $3 WHERE category = $4 AND title = $5',
+      ['assinar','assino','assinatura','plano','planos','contratar','contrato','plataforma','comecar','gratis','gratuito','preco','pago'],
+      'assinar|assino|assinatura|plano|planos|contratar|contrato|plataforma|comecar|gratis|gratuito|preco|pago',
+      "Você pode começar clicando em 'Começar grátis' 😊. Depois crie sua conta, ganhe sua primeira campanha gratuita e escolha um pacote de créditos quando desejar.",
+      'Comercial',
+      'Como assinar?',
+    );
   }
 
   private async findBestAnswer(message: string) {
+
     const normalized = this.normalize(message);
+    const normalizedTokens = this.tokenize(message);
     const kb: Array<{ category: string; title: string; answer: string; keywords: string[]; questionPattern: string; priority: number }> =
       await this.prisma.$queryRawUnsafe('SELECT category,title,answer,keywords,"questionPattern",priority FROM "help_knowledge_base" WHERE active=true ORDER BY priority DESC');
 
@@ -78,8 +113,13 @@ export class HelpService {
     let score = 0;
     for (const item of kb) {
       let s = 0;
-      for (const kw of item.keywords || []) if (normalized.includes(this.normalize(kw))) s += 3;
+      const keywordStems = (item.keywords || []).map((kw) => this.stemToken(this.normalize(kw)));
+            for (const kwStem of keywordStems) if (kwStem.length >= 3 && normalizedTokens.some((token) => token.startsWith(kwStem))) s += 3;
       if (new RegExp(item.questionPattern, 'i').test(normalized)) s += 4;
+
+      const commercialIntent = normalizedTokens.some((token) => ['assin','contrat'].some((root) => token.startsWith(root)));
+      const commercialContext = normalizedTokens.some((token) => ['plan','plataform','prec','pag','grat','comec'].some((root) => token.startsWith(root)));
+      if (item.category === 'Comercial' && commercialIntent && commercialContext) s += 8;
       if (s > score) {
         score = s;
         best = item;
