@@ -29,10 +29,34 @@ function isValidCpf(value: string) {
   return digit1 === Number(cpf[9]) && digit2 === Number(cpf[10]);
 }
 
+function maskCpf(cpf: string) {
+  const formatted = formatCpf(cpf);
+  return formatted.replace(/^(\d{3})\.\d{3}\.\d{3}-(\d{2})$/, '$1.XXX.XXX-$2');
+}
+
+function maskName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return name;
+  return [parts[0], ...parts.slice(1).map((part) => part[0].toUpperCase())].join(' ');
+}
+
+function maskPhone(phone: string) {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length < 8) return phone;
+  if (digits.length === 11) {
+    return `${digits.slice(0, 2)} ${digits.slice(2, 7)}-XX${digits.slice(9)}`;
+  }
+  if (digits.length === 10) {
+    return `${digits.slice(0, 2)} ${digits.slice(2, 6)}-XX${digits.slice(8)}`;
+  }
+  return `${digits.slice(0, 2)} ${digits.slice(2, digits.length - 2)}-XX${digits.slice(-2)}`;
+}
+
 export default function ConsumersPage() {
   const [items, setItems] = useState<any[]>([]);
   const [cpf, setCpf] = useState('');
   const [toast, setToast] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ cpf: '', name: '', phone: '' });
 
   const load = () => api('/consumers').then(setItems);
@@ -46,6 +70,22 @@ export default function ConsumersPage() {
     const timeout = setTimeout(() => setToast(''), 3000);
     return () => clearTimeout(timeout);
   }, [toast]);
+
+  const validateConsumerForm = () => {
+    if (!form.name.trim()) {
+      setToast('Nome é obrigatório.');
+      return false;
+    }
+    if (!form.phone.trim()) {
+      setToast('Telefone é obrigatório.');
+      return false;
+    }
+    if (!isValidCpf(form.cpf)) {
+      setToast('CPF inválido.');
+      return false;
+    }
+    return true;
+  };
 
   return (
     <div className='space-y-5'>
@@ -75,64 +115,93 @@ export default function ConsumersPage() {
             }
           }}
         >
-          Buscar CPF
+          Buscar
         </Button>
         <Button
           className='bg-white text-slate-800 hover:bg-slate-100'
           onClick={() => {
             setCpf('');
+            setEditingId(null);
             setForm({ cpf: '', name: '', phone: '' });
-            load();
+            void load();
           }}
         >
           Limpar
         </Button>
       </div>
 
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-3 rounded-md border p-4'>
-        <label className='space-y-1'>
+      <div className='space-y-3 rounded-md border p-4'>
+        <label className='block space-y-1'>
           <span className='text-sm font-medium'>CPF</span>
-          <input className='rounded-md border p-2' value={form.cpf} onChange={(e) => setForm({ ...form, cpf: formatCpf(e.target.value) })} />
+          <input
+            className='w-full rounded-md border p-2'
+            value={form.cpf}
+            onChange={(e) => setForm({ ...form, cpf: formatCpf(e.target.value) })}
+            onBlur={() => {
+              if (form.cpf && !isValidCpf(form.cpf)) setToast('CPF inválido.');
+            }}
+          />
         </label>
-        <label className='space-y-1'>
-          <span className='text-sm font-medium'>Nome</span>
-          <input className='rounded-md border p-2' value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        </label>
-        <label className='space-y-1'>
-          <span className='text-sm font-medium'>Telefone</span>
-          <input className='rounded-md border p-2' value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-        </label>
+
+        <div className='grid grid-cols-1 gap-3 md:grid-cols-3'>
+          <label className='space-y-1 md:col-span-2'>
+            <span className='text-sm font-medium'>Nome</span>
+            <input className='w-full rounded-md border p-2' value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </label>
+          <label className='space-y-1'>
+            <span className='text-sm font-medium'>Telefone</span>
+            <input className='w-full rounded-md border p-2' value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          </label>
+        </div>
+
         <Button
           className='w-fit'
           onClick={async () => {
-            if (!isValidCpf(form.cpf)) {
-              setToast('CPF inválido.');
-              return;
+            if (!validateConsumerForm()) return;
+
+            const payload = { ...form, cpf: form.cpf.replace(/\D/g, '') };
+            if (editingId) {
+              await api(`/consumers/${editingId}`, { method: 'PATCH', body: JSON.stringify(payload) });
+              setToast('Consumidor alterado com sucesso.');
+            } else {
+              await api('/consumers', { method: 'POST', body: JSON.stringify(payload) });
+              setToast('Consumidor cadastrado com sucesso.');
             }
-            await api('/consumers', { method: 'POST', body: JSON.stringify({ ...form, cpf: form.cpf.replace(/\D/g, '') }) });
+            setEditingId(null);
             setForm({ cpf: '', name: '', phone: '' });
-            setToast('Consumidor cadastrado com sucesso.');
-            load();
+            void load();
           }}
         >
-          Cadastrar
+          {editingId ? 'Salvar alterações' : 'Cadastrar consumidor'}
         </Button>
       </div>
 
-      <table className='w-full border-collapse rounded-md overflow-hidden border'>
+      <table className='w-full overflow-hidden rounded-md border border-collapse'>
         <thead className='bg-slate-100'>
           <tr>
             <th className='p-3 text-left'>CPF</th>
             <th className='p-3 text-left'>Nome</th>
             <th className='p-3 text-left'>Telefone</th>
+            <th className='p-3 text-left'>Ações</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item) => (
             <tr key={item.id} className='border-t'>
-              <td className='p-3'>{formatCpf(item.cpf)}</td>
-              <td className='p-3'>{item.name}</td>
-              <td className='p-3'>{item.phone}</td>
+              <td className='p-3'>{maskCpf(item.cpf)}</td>
+              <td className='p-3'>{maskName(item.name)}</td>
+              <td className='p-3'>{maskPhone(item.phone)}</td>
+              <td className='p-3'>
+                <Button
+                  className='bg-white text-slate-800 hover:bg-slate-100'
+                  onClick={() => {
+                    setEditingId(item.id);
+                    setForm({ cpf: formatCpf(item.cpf), name: item.name, phone: item.phone });
+                  }}
+                >
+                  Alterar
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
