@@ -6,6 +6,7 @@ export class CreditsService {
   constructor(private prisma: PrismaService) {}
   listPackages() { return this.prisma.creditPackage.findMany({ where: { active: true }, orderBy: { quantity: 'asc' } }); }
   async getBalance(tenantId: string) { const credit = await this.prisma.tenantCredit.upsert({ where: { tenantId }, update: {}, create: { tenantId, balance: 0 } }); return credit; }
+  history(tenantId: string) { return this.prisma.creditTransaction.findMany({ where: { tenantId }, orderBy: { createdAt: 'desc' } }); }
   async purchase(tenantId: string, packageId: string) {
     const pack = await this.prisma.creditPackage.findUnique({ where: { id: packageId } });
     if (!pack || !pack.active) throw new BadRequestException('Pacote inválido.');
