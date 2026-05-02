@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { createHash, randomUUID } from 'crypto';
 import { PrismaService } from '../prisma.service';
 import { CreditsService } from '../credits/credits.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
@@ -24,6 +25,20 @@ export class CampaignsService {
     return this.prisma.campaign.update({ where: { id }, data: { ...d, startDate: d.startDate ? new Date(d.startDate) : undefined, endDate: d.endDate ? new Date(d.endDate) : undefined } });
   }
   async toggle(tenantId: string, id: string) { const c = await this.get(tenantId, id); return this.prisma.campaign.update({ where: { id }, data: { active: !c.active } }); }
+  async activate(tenantId: string, id: string) { await this.get(tenantId, id); return this.prisma.campaign.update({ where: { id }, data: { active: true } }); }
+  async pause(tenantId: string, id: string) { await this.get(tenantId, id); return this.prisma.campaign.update({ where: { id }, data: { active: false } }); }
+  async finalize(tenantId: string, id: string, userId: string) {
+    const campaign = await this.get(tenantId, id);
+    const available = await this.prisma.coupon.findMany({ where: { tenantId, campaignId: id, active: true } });
+    if (available.length < 1) throw new BadRequestException('Não há cupons suficientes para finalizar e sortear.');
+    const seed = `${tenantId}-${id}-${Date.now()}-${randomUUID()}`;
+    const seedHash = createHash('sha256').update(seed).digest('hex');
+    const chosen = available[Math.floor(Math.random() * available.length)];
+    const draw = await this.prisma.draw.create({ data: { tenantId, campaignId: id, quantity: 1, drawnAt: new Date(), seed, seedHash, createdByUserId: userId } });
+    await this.prisma.drawWinner.create({ data: { drawId: draw.id, couponId: chosen.id, consumerId: chosen.consumerId, position: 1 } });
+    await this.prisma.campaign.update({ where: { id }, data: { active: false, endDate: new Date() } });
+    return this.prisma.draw.findUnique({ where: { id: draw.id }, include: { winners: { include: { consumer: true, coupon: true } }, campaign: true } });
+  }
   async remove(tenantId: string, id: string) {
     await this.get(tenantId, id);
     const [purchases, coupons] = await Promise.all([
