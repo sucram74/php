@@ -45,7 +45,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const publicRoutes = ['/', '/login'];
+  const publicRoutes = ['/', '/login', '/signup'];
   const isPublicRoute = publicRoutes.includes(pathname);
 
   useEffect(() => {

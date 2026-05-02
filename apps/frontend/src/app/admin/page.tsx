@@ -58,12 +58,12 @@ export default function AdminPage(){
       <div className='ui-table-wrap'><div className='min-w-[760px] space-y-2'>{pending.map((t:any)=><div key={t.id} className='grid gap-2 border-b pb-2 text-sm md:grid-cols-6'><span>{t.tenant?.name||'-'}</span><span>{t.packageName||'-'}</span><span>{t.quantity} créditos</span><span>{brl(Number(t.amount))}</span><span>{st(t.status)}</span><span className='flex gap-2'><Button onClick={async()=>{await api(`/credits/transactions/${t.id}/mark-paid`,{method:'PATCH'});setToast('Crédito aprovado com sucesso.');void load();}}>Aprovar</Button><Button variant='danger' onClick={async()=>{await api(`/credits/transactions/${t.id}/reject`,{method:'PATCH'});setToast('Transação rejeitada.');void load();}}>Rejeitar</Button></span></div>)}</div></div>
     </div>
 
-    <div className='ui-card space-y-3'>
-      <h2 className='font-semibold'>Perguntas do bot</h2>
+    <details className='ui-card space-y-3'>
+      <summary className='cursor-pointer font-semibold'>Insights do bot (colapsável)</summary>
       <p className='text-sm'>Não respondidas: {bot.unanswered?.length || 0}</p>
       <div className='ui-table-wrap'><div className='min-w-[640px] text-sm'>
         {(bot.unanswered||[]).slice(0,10).map((q:any,i:number)=><div key={i} className='border-b py-2'>{q.question}</div>)}
       </div></div>
-    </div>
+    </details>
   </div>
 }
