@@ -11,7 +11,7 @@ export function HelpBot({ mode = 'floating' }: { mode?: 'floating' | 'sidebar' }
   const [log, setLog] = useState<{ q: string; a: string }[]>([{ q: '', a: 'Olá! 😊 Sou a assistente do Promo SaaS.' }]);
 
   const panel = (
-    <div className='w-full rounded-md border bg-white p-3 text-slate-900 shadow-xl md:w-80'>
+    <div className='w-full rounded-md border border-slate-200 bg-white p-3 text-slate-900 shadow-xl md:w-80'>
       <div className='flex items-center justify-between'><h3 className='font-semibold'>Ajuda Promo SaaS</h3>{mode === 'floating' && <button className='text-xs' onClick={() => setOpen(false)}>Minimizar</button>}</div>
       <div className='my-2 max-h-52 overflow-auto text-sm'>{log.map((x, i) => <div key={i} className='mb-2'><p><strong>Você:</strong> {x.q}</p><p><strong>Bot:</strong> {x.a}</p></div>)}</div>
       <input className='ui-input' value={msg} onChange={(e) => setMsg(e.target.value)} placeholder='Digite sua dúvida...' />
@@ -25,5 +25,5 @@ export function HelpBot({ mode = 'floating' }: { mode?: 'floating' | 'sidebar' }
     return <div className='mt-4'>{panel}</div>;
   }
 
-  return <div className='fixed bottom-4 right-4 z-40 max-w-[92vw]'><button className='ml-auto block h-14 w-14 rounded-full bg-pink-500 text-2xl text-white shadow-lg' onClick={() => setOpen(!open)}>👩</button>{open && <div className='mt-2'>{panel}</div>}</div>;
+  return <div className='fixed bottom-5 right-5 z-30 max-w-[92vw]'><button aria-label='Abrir ajuda' className='ml-auto block h-11 w-11 rounded-full border border-slate-200 bg-white text-lg text-slate-700 shadow-md transition hover:shadow-lg' onClick={() => setOpen(!open)}>💬</button>{open && <div className='mt-2'>{panel}</div>}</div>;
 }
