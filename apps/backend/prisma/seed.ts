@@ -21,6 +21,25 @@ async function main() {
       active: true
     }
   });
+
+  const creditPackages = [
+    { name: 'Pacote Inicial', quantity: 5, price: 49.9 },
+    { name: 'Pacote Crescimento', quantity: 15, price: 129.9 },
+    { name: 'Pacote Escala', quantity: 40, price: 299.9 },
+  ];
+
+  for (const pkg of creditPackages) {
+    const existing = await prisma.creditPackage.findFirst({ where: { name: pkg.name } });
+    if (existing) {
+      await prisma.creditPackage.update({
+        where: { id: existing.id },
+        data: { quantity: pkg.quantity, price: pkg.price, active: true },
+      });
+      continue;
+    }
+
+    await prisma.creditPackage.create({ data: pkg });
+  }
 }
 
 main().finally(() => prisma.$disconnect());

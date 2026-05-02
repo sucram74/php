@@ -12,7 +12,11 @@ export class CreditsService {
     if (!pack || !pack.active) throw new BadRequestException('Pacote inválido.');
     return this.prisma.creditTransaction.create({ data: { tenantId, type: 'purchase', quantity: pack.quantity, amount: pack.price, status: 'pending', paymentMethod: 'pix', pixKey: 'CHAVE_PIX_CONFIGURAR_ADMIN', pixQrCode: `PIX|${pack.name}|${pack.price}`, pixCopyPaste: `00020126MVPPIX${pack.id}`, packageName: pack.name } });
   }
-  async inform(id: string, tenantId: string) { return this.prisma.creditTransaction.update({ where: { id, tenantId }, data: { status: 'pending_review' as any } }); }
+  async inform(id: string, tenantId: string) {
+    const tx = await this.prisma.creditTransaction.findFirst({ where: { id, tenantId } });
+    if (!tx) throw new BadRequestException('Transação não encontrada para este tenant.');
+    return this.prisma.creditTransaction.update({ where: { id }, data: { status: 'pending_review' } });
+  }
   async markPaid(_adminTenantId: string, id: string) {
     const tx = await this.prisma.creditTransaction.findUnique({ where: { id } });
     if (!tx) throw new BadRequestException('Transação não encontrada.');
