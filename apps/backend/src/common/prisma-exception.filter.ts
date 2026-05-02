@@ -1,4 +1,4 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 
 type PrismaErrorLike = { code?: string };
@@ -6,18 +6,32 @@ type PrismaErrorLike = { code?: string };
 @Catch()
 export class PrismaExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
-    const maybePrisma = exception as PrismaErrorLike;
-    if (!maybePrisma?.code?.startsWith('P')) throw exception;
-
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const mapped = this.mapCode(maybePrisma.code);
 
-    response.status(mapped.status).json({
-      statusCode: mapped.status,
-      error: mapped.error,
-      message: mapped.message,
-      prismaCode: maybePrisma.code,
+    if (exception instanceof HttpException) {
+      const status = exception.getStatus();
+      const exceptionResponse = exception.getResponse();
+      response.status(status).json(exceptionResponse);
+      return;
+    }
+
+    const maybePrisma = exception as PrismaErrorLike;
+    if (maybePrisma?.code?.startsWith('P')) {
+      const mapped = this.mapCode(maybePrisma.code);
+      response.status(mapped.status).json({
+        statusCode: mapped.status,
+        error: mapped.error,
+        message: mapped.message,
+        prismaCode: maybePrisma.code,
+      });
+      return;
+    }
+
+    response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      error: 'Internal Server Error',
+      message: 'Erro interno do servidor.',
     });
   }
 
